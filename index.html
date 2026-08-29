@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qattah cloud - الصندوق العائلي</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --primary: #15803d;
+            --primary-hover: #166534;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --border: #e2e8f0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: 70px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 500px; padding: 16px; }
+        
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .app-title { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+        .family-name { font-size: 1.25rem; font-weight: 800; color: var(--text-main); }
+        
+        .stats-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+        .stat-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .stat-box label { font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 6px; font-weight: 600; text-align: center; }
+        .stat-input { width: 100%; padding: 8px; font-size: 1.1rem; font-weight: 700; border: 1px solid var(--border); border-radius: 8px; background: #f8fafc; color: var(--text-main); text-align: center; margin-bottom: 6px; }
+        .stat-input:focus { border-color: var(--primary); outline: none; background: #fff; }
+
+        .card { background-color: var(--card-bg); border-radius: 14px; padding: 16px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 12px; margin-bottom: 12px; background: #f8fafc; border: 1px solid var(--border); color: var(--text-main); border-radius: 8px; font-size: 0.9rem; }
+        
+        button { padding: 10px 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
+        button:hover { background: var(--primary-hover); }
+        .btn-secondary { background: #e2e8f0; color: var(--text-main); width: 100%; margin-top: 8px; }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-edit { background: #475569; color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        
+        .row { display: flex; flex-direction: column; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        .row:last-child { border-bottom: none; }
+        .row-top { display: flex; justify-content: space-between; align-items: center; }
+        .row-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 4px; }
+        .row-actions-sub { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 2px; }
+        
+        .badge { padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; display: inline-block; }
+        .badge.paid { background: #dcfce7; color: var(--primary); }
+        .badge.unpaid { background: #fee2e2; color: var(--danger); }
+        
+        .hidden { display: none !important; }
+        .section-title { font-size: 0.95rem; font-weight: 700; color: var(--text-main); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div>
+            <span class="app-title">Qattah cloud</span>
+            <div class="family-name">الصندوق العائلي</div>
+        </div>
+        <button id="adminToggleBtn" style="padding: 6px 12px; font-size: 0.75rem;" onclick="toggleAdminMode()">دخول المشرف</button>
+    </header>
+
+    <!-- واجهة المتسلفين (الأعضاء) -->
+    <div id="memberScreen">
+        <div class="card" style="text-align: center;">
+            <h3 style="margin-bottom: 6px; font-size: 1.1rem;">واجهة المتسلفين</h3>
+            <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 14px;">اختر أسماً من القائمة لعرض تفاصيل حسابه ومتابعة سداد السلف</p>
+            <select id="memberSelect" onchange="loadMemberPortal()">
+                <option value="">-- اختر اسم العضو --</option>
+            </select>
+        </div>
+
+        <div id="memberPortalCard" class="card hidden">
+            <h3 id="portalName" style="color: var(--primary); margin-bottom: 12px; font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px;"></h3>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem;">
+                <span style="color: var(--text-muted);">حالة المساهمة الشهرية:</span>
+                <span id="portalStatus" class="badge"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem;">
+                <span style="color: var(--text-muted);">إجمالي السلفة:</span>
+                <strong id="portalTotalLoan" style="color: var(--text-main);">0 ر.س</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem;">
+                <span style="color: var(--text-muted);">مبلغ السلفة المتبقي:</span>
+                <strong id="portalLoan" style="color: var(--warning);">0 ر.س</strong>
+            </div>
+            
+            <div style="margin-top: 14px; border-top: 1px solid var(--border); padding-top: 10px;">
+                <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 6px;">متابعة سداد أقساط السلف حسب الشهر:</label>
+                <select id="portalMonthSelect" onchange="checkPortalMonthStatus()">
+                    <option value="">-- اختر الشهر --</option>
+                    <option value="1">يناير</option>
+                    <option value="2">فبراير</option>
+                    <option value="3">مارس</option>
+                    <option value="4">أبريل</option>
+                    <option value="5">مايو</option>
+                    <option value="6">يونيو</option>
+                    <option value="7">يوليو</option>
+                    <option value="8">أغسطس</option>
+                    <option value="9">سبتمبر</option>
+                    <option value="10">أكتوبر</option>
+                    <option value="11">نوفمبر</option>
+                    <option value="12">ديسمبر</option>
+                </select>
+                <div id="portalMonthResult" style="font-size: 0.85rem; font-weight: 600; text-align: center; margin-top: 6px;"></div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-top: 12px;">
+                <span style="color: var(--text-muted);">رقم الجوال المسجل:</span>
+                <span id="portalPhone"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- لوحة تحكم المشرف -->
+    <div id="adminScreen" class="hidden">
+        <div class="stats-grid-2">
+            <div class="stat-box">
+                <label>إجمالي المساهمة هذا الشهر</label>
+                <select id="statMonthSelect" onchange="updateMonthStatInput()" style="margin-bottom: 6px; padding: 6px; font-size: 0.8rem;">
+                    <option value="1">يناير</option>
+                    <option value="2">فبراير</option>
+                    <option value="3">مارس</option>
+                    <option value="4">أبريل</option>
+                    <option value="5">مايو</option>
+                    <option value="6">يونيو</option>
+                    <option value="7">يوليو</option>
+                    <option value="8">أغسطس</option>
+                    <option value="9">سبتمبر</option>
+                    <option value="10">أكتوبر</option>
+                    <option value="11">نوفمبر</option>
+                    <option value="12">ديسمبر</option>
+                </select>
+                <input type="number" id="inputMonthTotal" class="stat-input" oninput="saveCurrentMonthStat(this.value)" placeholder="0">
+            </div>
+            <div class="stat-box">
+                <label>إجمالي رصيد الصندوق</label>
+                <div style="height: 28px;"></div> <!-- مطابقة الارتفاع -->
+                <input type="number" id="inputBalance" class="stat-input" oninput="updateManualStat('manualBalance', this.value)" placeholder="0">
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 class="section-title" style="margin-bottom: 12px;">إضافة عضو جديد</h3>
+            <input type="text" id="newName" placeholder="اسم العضو الرباعي">
+            <input type="text" id="newPhone" placeholder="رقم الجوال (مثال: 0555555555)">
+            <input type="number" id="newTotalLoan" placeholder="إجمالي السلفة (اختياري)">
+            <input type="number" id="newLoan" placeholder="مبلغ السلفة المتبقي (اختياري)">
+            <button style="width: 100%;" onclick="addMember()">إضافة للقائمة</button>
+        </div>
+
+        <div class="card">
+            <h3 class="section-title" style="margin-bottom: 12px;">إدارة جميع الأعضاء والاشتراكات والسلف</h3>
+            <div id="adminMembersList">لا توجد بيانات</div>
+        </div>
+
+        <button class="btn-secondary" onclick="toggleAdminMode()">العودة لواجهة المتسلفين</button>
+    </div>
+</div>
+
+<script>
+    const STORAGE_KEY = "family_fund_data_v13";
+    const ADMIN_PASS = "1234";
+
+    let db = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+        members: [],
+        monthlyTotals: {}, // لتخزين إجمالي المساهمة لكل شهر (مثال: {"1": 1000, "2": 1200})
+        manualBalance: ""
+    };
+
+    function saveDB() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+    }
+
+    let isAdmin = false;
+    function toggleAdminMode() {
+        if (!isAdmin) {
+            let pass = prompt("الرجاء إدخال رمز المشرف:");
+            if (pass === ADMIN_PASS) {
+                isAdmin = true;
+                document.getElementById("adminScreen").classList.remove("hidden");
+                document.getElementById("memberScreen").classList.add("hidden");
+                document.getElementById("adminToggleBtn").textContent = "واجهة المتسلفين";
+                updateMonthStatInput();
+                render();
+            } else if (pass !== null) {
+                alert("الرمز غير صحيح!");
+            }
+        } else {
+            isAdmin = false;
+            document.getElementById("adminScreen").classList.add("hidden");
+            document.getElementById("memberScreen").classList.remove("hidden");
+            document.getElementById("adminToggleBtn").textContent = "دخول المشرف";
+            render();
+        }
+    }
+
+    function addMember() {
+        let name = document.getElementById("newName").value.trim();
+        let phone = document.getElementById("newPhone").value.trim();
+        let totalLoan = Number(document.getElementById("newTotalLoan").value) || 0;
+        let loan = Number(document.getElementById("newLoan").value) || 0;
+
+        if (!name) { alert("الرجاء كتابة اسم العضو"); return; }
+        
+        // إنشاء سجل شهور افتراضي للسلفة (غير مسددة بشكل افتراضي لكل الشهور)
+        let loanMonths = {};
+        for(let i=1; i<=12; i++) loanMonths[i] = false;
+
+        db.members.push({ name, phone, paid: false, totalLoan, loan, loanMonths });
+        saveDB();
+        
+        document.getElementById("newName").value = "";
+        document.getElementById("newPhone").value = "";
+        document.getElementById("newTotalLoan").value = "";
+        document.getElementById("newLoan").value = "";
+        render();
+        alert("تمت الإضافة بنجاح");
+    }
+
+    function togglePaidStatus(index) {
+        db.members[index].paid = !db.members[index].paid;
+        saveDB();
+        render();
+    }
+
+    function toggleLoanMonth(memberIndex, month) {
+        if(!db.members[memberIndex].loanMonths) {
+            db.members[memberIndex].loanMonths = {};
+        }
+        db.members[memberIndex].loanMonths[month] = !db.members[memberIndex].loanMonths[month];
+        saveDB();
+        render();
+    }
+
+    function updateLoan(index) {
+        let currentMember = db.members[index];
+        let newTotal = prompt(`أدخل إجمالي السلفة للعضو (${currentMember.name}):`, currentMember.totalLoan || 0);
+        if (newTotal === null) return;
+        let newRemaining = prompt(`أدخل مبلغ السلفة المتبقي للعضو (${currentMember.name}):`, currentMember.loan || 0);
+        if (newRemaining === null) return;
+
+        db.members[index].totalLoan = Number(newTotal) || 0;
+        db.members[index].loan = Number(newRemaining) || 0;
+        saveDB();
+        render();
+    }
+
+    function editMember(index) {
+        let member = db.members[index];
+        let newName = prompt("تعديل اسم العضو:", member.name);
+        if (newName === null) return;
+        let newPhone = prompt("تعديل رقم الجوال:", member.phone || "");
+        if (newPhone === null) return;
+        let newTotal = prompt("تعديل إجمالي السلفة:", member.totalLoan || 0);
+        if (newTotal === null) return;
+        let newRemaining = prompt("تعديل السلفة المتبقية:", member.loan || 0);
+        if (newRemaining === null) return;
+
+        db.members[index].name = newName.trim() || member.name;
+        db.members[index].phone = newPhone.trim();
+        db.members[index].totalLoan = Number(newTotal) || 0;
+        db.members[index].loan = Number(newRemaining) || 0;
+        saveDB();
+        render();
+    }
+
+    function deleteMember(index) {
+        let member = db.members[index];
+        if (confirm(`هل أنت تأكد من حذف العضو (${member.name})؟`)) {
+            db.members.splice(index, 1);
+            saveDB();
+            render();
+        }
+    }
+
+    function updateManualStat(key, value) {
+        db[key] = value;
+        saveDB();
+    }
+
+    function updateMonthStatInput() {
+        let selectedMonth = document.getElementById("statMonthSelect").value;
+        document.getElementById("inputMonthTotal").value = db.monthlyTotals[selectedMonth] || "";
+    }
+
+    function saveCurrentMonthStat(value) {
+        let selectedMonth = document.getElementById("statMonthSelect").value;
+        db.monthlyTotals[selectedMonth] = value;
+        saveDB();
+    }
+
+    function sendAlert(phone, name) {
+        if (!phone) { alert("رقم الجوال غير متوفر"); return; }
+        let message = `عزيزي العضو ${name}، نود تذكيركم بسداد المساهمة أو قسط السلفة للصندوق العائلي.`;
+        let cleanPhone = phone.replace(/[^0-9]/g, '');
+        if (cleanPhone.startsWith('0')) cleanPhone = '966' + cleanPhone.substring(1);
+        window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
+    }
+
+    function loadMemberPortal() {
+        let index = document.getElementById("memberSelect").value;
+        let portalCard = document.getElementById("memberPortalCard");
+        if (index === "") {
+            portalCard.classList.add("hidden");
+            return;
+        }
+        let m = db.members[index];
+        document.getElementById("portalName").textContent = m.name;
+        document.getElementById("portalPhone").textContent = m.phone || "غير متوفر";
+        
+        let statusBadge = document.getElementById("portalStatus");
+        statusBadge.textContent = m.paid ? "مسدد المساهمة" : "غير مسدد";
+        statusBadge.className = "badge " + (m.paid ? "paid" : "unpaid");
+
+        document.getElementById("portalTotalLoan").textContent = (m.totalLoan || 0) + " ر.س";
+        document.getElementById("portalLoan").textContent = (m.loan || 0) + " ر.س";
+        
+        document.getElementById("portalMonthSelect").value = "";
+        document.getElementById("portalMonthResult").textContent = "";
+        
+        portalCard.classList.remove("hidden");
+    }
+
+    function checkPortalMonthStatus() {
+        let index = document.getElementById("memberSelect").value;
+        let month = document.getElementById("portalMonthSelect").value;
+        let resultDiv = document.getElementById("portalMonthResult");
+        
+        if (index === "" || month === "") {
+            resultDiv.textContent = "";
+            return;
+        }
+
+        let m = db.members[index];
+        let isPaidMonth = m.loanMonths && m.loanMonths[month];
+        
+        if (isPaidMonth) {
+            resultDiv.innerHTML = '<span style="color: var(--primary);">حالة السلفة لهذا الشهر: مسدد ✅</span>';
+        } else {
+            resultDiv.innerHTML = '<span style="color: var(--danger);">حالة السلفة لهذا الشهر: غير مسدد ❌</span>';
+        }
+    }
+
+    function render() {
+        let select = document.getElementById("memberSelect");
+        let currentSelected = select.value;
+        select.innerHTML = '<option value="">-- اختر اسم العضو --</option>';
+        db.members.forEach((m, i) => {
+            select.innerHTML += `<option value="${i}">${m.name}</option>`;
+        });
+        select.value = currentSelected;
+        if(currentSelected !== "") loadMemberPortal();
+
+        if (document.getElementById("adminScreen").classList.contains("hidden") === false) {
+            updateMonthStatInput();
+        }
+        document.getElementById("inputBalance").value = db.manualBalance;
+
+        let adminList = document.getElementById("adminMembersList");
+        if (db.members.length === 0) {
+            adminList.innerHTML = '<p style="color: var(--text-muted); font-size: 0.85rem; text-align: center;">لا توجد بيانات</p>';
+        } else {
+            const monthsNames = {1:"يناير", 2:"فبراير", 3:"مارس", 4:"أبريل", 5:"مايو", 6:"يونيو", 7:"يوليو", 8:"أغسطس", 9:"سبتمبر", 10:"أكتوبر", 11:"نوفمبر", 12:"ديسمبر"};
+            
+            adminList.innerHTML = db.members.map((m, i) => {
+                // توليد قائمة منسدلة أو خيارات أشهريّة لسداد السلفة لكل عضو في لوحة المشرف
+                let monthsDropdown = `<select onchange="toggleLoanMonth(${i}, this.value)" style="margin-top:6px; font-size:0.8rem; padding:6px;">
+                    <option value="">-- متابعة سداد سلفة الشهور --</option>`;
+                for(let mNum=1; mNum<=12; mNum++) {
+                    let paidStatus = (m.loanMonths && m.loanMonths[mNum]) ? "مسدد ✅" : "غير مسدد ❌";
+                    monthsDropdown += `<option value="${mNum}">${monthsNames[mNum]} : ${paidStatus}</option>`;
+                }
+                monthsDropdown += `</select>`;
+
+                return `
+                <div class="row">
+                    <div class="row-top">
+                        <div>
+                            <strong>${m.name}</strong><br>
+                            <span style="color: var(--text-muted); font-size: 0.75rem;">جوال: ${m.phone || "بدون"} | إجمالي السلفة: <strong style="color: var(--text-main);">${m.totalLoan || 0} ر.س</strong> | المتبقي: <strong style="color: var(--warning);">${m.loan || 0} ر.س</strong></span>
+                        </div>
+                        <span class="badge ${m.paid ? 'paid' : 'unpaid'}">${m.paid ? 'مسدد' : 'غير مسدد'}</span>
+                    </div>
+                    ${monthsDropdown}
+                    <div class="row-actions">
+                        <button onclick="togglePaidStatus(${i})">السداد</button>
+                        <button class="btn-warning" onclick="updateLoan(${i})">السلفة</button>
+                        <button style="background: #2563eb;" onclick="sendAlert('${m.phone}', '${m.name}')">تنبيه</button>
+                    </div>
+                    <div class="row-actions-sub">
+                        <button class="btn-edit" onclick="editMember(${i})">تعديل البيانات</button>
+                        <button class="btn-danger" onclick="deleteMember(${i})">حذف العضو</button>
+                    </div>
+                </div>
+            `;
+            }).join("");
+        }
+    }
+
+    render();
+</script>
+
+</body>
+</html>
