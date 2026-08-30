@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صندوق العائلة - Qattah Cloud</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --primary: #22c55e;
+            --primary-hover: #16a34a;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --border: #334155;
+        }
+        body {
+            font-family: Tahoma, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: var(--primary);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-muted);
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-color);
+            color: var(--text-main);
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: var(--primary-hover);
+        }
+        #status {
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>صندوق العائلة</h1>
+        <div class="form-group">
+            <label>اسم العضو</label>
+            <input type="text" id="memberName" placeholder="أدخل اسمك الكريم">
+        </div>
+        <div class="form-group">
+            <label>المبلغ المدفوع (ريال)</label>
+            <input type="number" id="amount" placeholder="0">
+        </div>
+        <button onclick="saveData()">تسجيل المساهمة</button>
+        <p id="status"></p>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <script>
+        // إعدادات Firebase المحدثة مع قاعدة البيانات الخاصة بك
+        const firebaseConfig = {
+            apiKey: "AIzaSyDNZo8j6EuctfFX5y6j...",
+            authDomain: "family-fund-db.firebaseapp.com",
+            databaseURL: "https://family-fund-db-default-rtdb.firebaseio.com",
+            projectId: "family-fund-db",
+            storageBucket: "family-fund-db.appspot.com",
+            messagingSenderId: "606664394948",
+            appId: "1:606664394948:web:b605f75..."
+        };
+
+        // تهيئة Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        function saveData() {
+            const name = document.getElementById('memberName').value;
+            const amount = document.getElementById('amount').value;
+            const status = document.getElementById('status');
+
+            if(!name || !amount) {
+                status.style.color = "var(--danger)";
+                status.innerText = "الرجاء تعبئة جميع الحقول!";
+                return;
+            }
+
+            db.ref('contributions').push({
+                name: name,
+                amount: Number(amount),
+                date: new Date().toISOString()
+            }, (error) => {
+                if (error) {
+                    status.style.color = "var(--danger)";
+                    status.innerText = "حدث خطأ أثناء الحفظ!";
+                } else {
+                    status.style.color = "var(--primary)";
+                    status.innerText = "تم حفظ المساهمة بنجاح!";
+                    document.getElementById('memberName').value = '';
+                    document.getElementById('amount').value = '';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
