@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qattah cloud - الصندوق</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --primary: #22c55e;
+            --primary-hover: #16a34a;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --border: #334155;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: 70px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 500px; padding: 16px; }
+        
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .app-title { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+        .family-name { font-size: 1.25rem; font-weight: 800; color: var(--text-main); }
+        .header-actions { display: flex; gap: 6px; align-items: center; }
+        
+        .stats-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+        .stat-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        .stat-box label { font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 6px; font-weight: 600; text-align: center; }
+        .stat-input { width: 100%; padding: 8px; font-size: 1.1rem; font-weight: 700; border: 1px solid var(--border); border-radius: 8px; background: #0f172a; color: var(--text-main); text-align: center; margin-bottom: 6px; }
+        .stat-input:focus { border-color: var(--primary); outline: none; background: #1e293b; }
+
+        .card { background-color: var(--card-bg); border-radius: 14px; padding: 16px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 10px 12px; margin-bottom: 10px; background: #0f172a; border: 1px solid var(--border); color: var(--text-main); border-radius: 8px; font-size: 0.9rem; }
+        input[type="text"]:focus, input[type="number"]:focus, select:focus { border-color: var(--primary); outline: none; }
+        
+        button { padding: 10px 14px; background: var(--primary); color: #0f172a; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.85rem; }
+        button:hover { background: var(--primary-hover); color: #ffffff; }
+        .btn-secondary { background: #334155; color: var(--text-main); width: 100%; margin-top: 8px; }
+        .btn-warning { background: var(--warning); color: #0f172a; }
+        .btn-edit { background: #475569; color: white; }
+        .btn-danger { background: #ef4444; color: white; }
+        
+        .row { display: flex; flex-direction: column; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        .row:last-child { border-bottom: none; }
+        .row-top { display: flex; justify-content: space-between; align-items: flex-start; }
+        .row-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 4px; }
+        .row-actions-sub { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 2px; }
+        
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; display: inline-block; white-space: nowrap; text-align: center; }
+        .badge.paid { background: #064e3b; color: #4ade80; }
+        .badge.partial { background: #78350f; color: #fcd34d; }
+        .badge.unpaid { background: #7f1d1d; color: #fca5a5; }
+        
+        .details-box { margin-top: 8px; background: #0f172a; border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
+        .month-item { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(51, 65, 85, 0.4); font-size: 0.85rem; gap: 6px; }
+        .month-item:last-child { border-bottom: none; }
+        .month-input { width: 85px !important; padding: 5px !important; margin-bottom: 0 !important; text-align: center; font-weight: 700; font-size: 0.8rem !important; }
+        .month-select { width: 110px !important; padding: 5px !important; margin-bottom: 0 !important; font-size: 0.75rem !important; font-weight: 700; }
+
+        .select-unpaid { background-color: #7f1d1d !important; color: #fca5a5 !important; border-color: #ef4444 !important; }
+        .select-partial { background-color: #78350f !important; color: #fcd34d !important; border-color: #f59e0b !important; }
+        .select-paid { background-color: #064e3b !important; color: #4ade80 !important; border-color: #22c55e !important; }
+
+        .hidden { display: none !important; }
+        .section-title { font-size: 0.95rem; font-weight: 700; color: var(--text-main); }
+        .toggle-arrows { font-size: 0.7rem; background: #334155; padding: 2px 5px; border-radius: 4px; display: inline-flex; flex-direction: column; line-height: 0.7; vertical-align: middle; margin-right: 6px; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div>
+            <span class="app-title">Qattah cloud</span>
+            <div class="family-name">الصندوق</div>
+        </div>
+        <div class="header-actions">
+            <button id="adminToggleBtn" class="hidden" style="padding: 6px 10px; font-size: 0.75rem;" onclick="toggleAdminMode()">دخول المشرف</button>
+            <button id="mainHomeBtn" class="hidden" style="padding: 6px 10px; font-size: 0.75rem;" onclick="goToHome()">الرئيسية</button>
+        </div>
+    </header>
+
+    <div id="homeScreen">
+        <div class="card" style="text-align: center; padding: 24px 16px;">
+            <h3 style="margin-bottom: 8px; font-size: 1.2rem;">اختر الواجهة المطلوبة</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">حدد القسم الخاص بك لمتابعة المتسلفين والحسابات</p>
+            
+            <button onclick="selectPortal('saeed')" style="width: 100%; padding: 14px; font-size: 1rem; margin-bottom: 12px; background: #3b82f6; color: white;">
+                واجهة سعيد والمتسلفين
+            </button>
+            <button onclick="selectPortal('fahad')" style="width: 100%; padding: 14px; font-size: 1rem; background: var(--primary); color: #0f172a;">
+                واجهة فهد والمتسلفين
+            </button>
+        </div>
+    </div>
+
+    <div id="memberScreen" class="hidden">
+        <div class="card" style="text-align: center;">
+            <h3 id="portalScreenTitle" style="margin-bottom: 6px; font-size: 1.1rem; color: var(--primary);">واجهة المتسلفين</h3>
+            <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 14px;">اختر أسماً من القائمة لعرض تفاصيل حسابه ومتابعة سداد السلف</p>
+            <select id="memberSelect" onchange="loadMemberPortal()">
+                <option value="">-- اختر اسم العضو --</option>
+            </select>
+        </div>
+
+        <div id="memberPortalCard" class="card hidden">
+            <h3 id="portalName" style="color: var(--primary); margin-bottom: 12px; font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px;"></h3>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem;">
+                <span style="color: var(--text-muted);">ملاحظات/نص إضافي:</span>
+                <span id="portalNoteText" style="font-weight: 600;">-</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.85rem;">
+                <span style="color: var(--text-muted);">البنك المختار:</span>
+                <span id="portalBankText" style="font-weight: 600;">-</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem;">
+                <span style="color: var(--text-muted);">حالة المساهمة الشهرية:</span>
+                <span id="portalStatus" class="badge"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem;">
+                <span style="color: var(--text-muted);">إجمالي السلفة:</span>
+                <strong id="portalTotalLoan" style="color: var(--text-main);"></strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem;">
+                <span style="color: var(--text-muted);">مبلغ السلفة المتبقي:</span>
+                <strong id="portalLoan" style="color: var(--warning);"></strong>
+            </div>
+            
+            <div style="margin-top: 14px; border-top: 1px solid var(--border); padding-top: 10px;">
+                <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 6px;">متابعة سداد أقساط السلف حسب الشهر:</label>
+                <select id="portalMonthSelect" onchange="checkPortalMonthStatus()">
+                    <option value="">-- اختر الشهر --</option>
+                    <option value="1">يناير</option>
+                    <option value="2">فبراير</option>
+                    <option value="3">مارس</option>
+                    <option value="4">أبريل</option>
+                    <option value="5">مايو</option>
+                    <option value="6">يونيو</option>
+                    <option value="7">يوليو</option>
+                    <option value="8">أغسطس</option>
+                    <option value="9">سبتمبر</option>
+                    <option value="10">أكتوبر</option>
+                    <option value="11">نوفمبر</option>
+                    <option value="12">ديسمبر</option>
+                </select>
+                <div id="portalMonthResult" style="font-size: 0.85rem; font-weight: 600; text-align: center; margin-top: 6px;"></div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-top: 12px;">
+                <span style="color: var(--text-muted);">رقم الجوال المسجل:</span>
+                <span id="portalPhone"></span>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminScreen" class="hidden">
+        <div class="stats-grid-2">
+            <div class="stat-box">
+                <label>إجمالي المساهمة هذا الشهر</label>
+                <select id="statMonthSelect" onchange="updateMonthStatInput()" style="margin-bottom: 6px; padding: 6px; font-size: 0.8rem;">
+                    <option value="1">يناير</option>
+                    <option value="2">فبراير</option>
+                    <option value="3">مارس</option>
+                    <option value="4">أبريل</option>
+                    <option value="5">مايو</option>
+                    <option value="6">يونيو</option>
+                    <option value="7">يوليو</option>
+                    <option value="8">أغسطس</option>
+                    <option value="9">سبتمبر</option>
+                    <option value="10">أكتوبر</option>
+                    <option value="11">نوفمبر</option>
+                    <option value="12">ديسمبر</option>
+                </select>
+                <input type="number" id="inputMonthTotal" class="stat-input" oninput="saveCurrentMonthStat(this.value)" placeholder="0">
+            </div>
+            <div class="stat-box">
+                <label>إجمالي رصيد الصندوق</label>
+                <div style="height: 28px;"></div>
+                <input type="number" id="inputBalance" class="stat-input" oninput="updateManualStat('manualBalance', this.value)" placeholder="0">
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 class="section-title" style="margin-bottom: 12px;">إضافة عضو جديد</h3>
+            <input type="text" id="newName" placeholder="اسم العضو الرباعي">
+            <input type="text" id="newPhone" placeholder="رقم الجوال (مثال: 0555555555)">
+            <input type="number" id="newTotalLoan" placeholder="إجمالي السلفة (اختياري)">
+            <input type="number" id="newLoan" placeholder="مبلغ السلفة المتبقي (اختياري)">
+            <button style="width: 100%;" onclick="addMember()">إضافة للقائمة</button>
+        </div>
+
+        <div class="card">
+            <h3 class="section-title" style="margin-bottom: 12px;">إدارة جميع الأعضاء والاشتراكات والسلف</h3>
+            <div id="adminMembersList">لا توجد بيانات</div>
+        </div>
+
+        <button class="btn-secondary" onclick="toggleAdminMode()">العودة لواجهة المتسلفين</button>
+    </div>
+</div>
+
+<script>
+    const STORAGE_KEY = "family_fund_separated_v25";
+    const ADMIN_PASS = "1234";
+
+    const saudiBanks = [
+        "البنك الأهلي السعودي (SNB)",
+        "مصرف الراجحي",
+        "بنك الرياض",
+        "البنك السعودي البريطاني (ساب / SAB)",
+        "البنك السعودي الفرنسي",
+        "بنك الجزيرة",
+        "البنك العربي الوطني (ANB)",
+        "مصرف الإنماء",
+        "بنك البلاد",
+        "البنك السعودي للاستثمار",
+        "بنك الخليج الدولي (GIB)"
+    ];
+
+    let globalData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+        saeed: { members: [], monthlyTotals: {}, manualBalance: "" },
+        fahad: { members: [], monthlyTotals: {}, manualBalance: "" }
+    };
+
+    let currentPortal = null;
+    let isAdmin = false;
+
+    function saveDB() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(globalData));
+    }
+
+    function selectPortal(portalKey) {
+        currentPortal = portalKey;
+        isAdmin = false;
+        document.getElementById("homeScreen").classList.add("hidden");
+        document.getElementById("memberScreen").classList.remove("hidden");
+        document.getElementById("mainHomeBtn").classList.remove("hidden");
+        document.getElementById("adminToggleBtn").classList.remove("hidden");
+        document.getElementById("adminScreen").classList.add("hidden");
+        document.getElementById("adminToggleBtn").textContent = "دخول المشرف";
+        
+        let titleText = (currentPortal === 'saeed') ? "واجهة سعيد والمتسلفين" : "واجهة فهد والمتسلفين";
+        document.getElementById("portalScreenTitle").textContent = titleText;
+        
+        render();
+    }
+
+    function goToHome() {
+        currentPortal = null;
+        isAdmin = false;
+        document.getElementById("homeScreen").classList.remove("hidden");
+        document.getElementById("memberScreen").classList.add("hidden");
+        document.getElementById("adminScreen").classList.add("hidden");
+        document.getElementById("mainHomeBtn").classList.add("hidden");
+        document.getElementById("adminToggleBtn").classList.add("hidden");
+    }
+
+    function toggleAdminMode() {
+        let db = globalData[currentPortal];
+        if (!isAdmin) {
+            let pass = prompt("الرجاء إدخال رمز المشرف:");
+            if (pass === ADMIN_PASS) {
+                isAdmin = true;
+                document.getElementById("adminScreen").classList.remove("hidden");
+                document.getElementById("memberScreen").classList.add("hidden");
+                document.getElementById("adminToggleBtn").textContent = "واجهة المتسلفين";
+                updateMonthStatInput();
+                render();
+            } else if (pass !== null) {
+                alert("الرمز غير صحيح!");
+            }
+        } else {
+            isAdmin = false;
+            document.getElementById("adminScreen").classList.add("hidden");
+            document.getElementById("memberScreen").classList.remove("hidden");
+            document.getElementById("adminToggleBtn").textContent = "دخول المشرف";
+            render();
+        }
+    }
+
+    function addMember() {
+        let db = globalData[currentPortal];
+        let name = document.getElementById("newName").value.trim();
+        let phone = document.getElementById("newPhone").value.trim();
+        let totalLoan = Number(document.getElementById("newTotalLoan").value) || 0;
+        let loan = Number(document.getElementById("newLoan").value) || 0;
+
+        if (!name) { alert("الرجاء كتابة اسم العضو"); return; }
+        
+        let loanMonths = {};
+        let loanStatuses = {};
+        for(let i=1; i<=12; i++) {
+            loanMonths[i] = "";
+            loanStatuses[i] = "unpaid";
+        }
+
+        db.members.push({ 
+            name, 
+            phone, 
+            status: "unpaid", 
+            totalLoan, 
+            loan, 
+            loanMonths,
+            loanStatuses,
+            note: "",
+            bank: ""
+        });
+        saveDB();
+        
+        document.getElementById("newName").value = "";
+        document.getElementById("newPhone").value = "";
+        document.getElementById("newTotalLoan").value = "";
+        document.getElementById("newLoan").value = "";
+        render();
+        alert("تمت الإضافة بنجاح");
+    }
+
+    function cycleStatus(index) {
+        let db = globalData[currentPortal];
+        let m = db.members[index];
+        if(m.status === "unpaid") m.status = "paid";
+        else if(m.status === "paid") m.status = "partial";
+        else m.status = "unpaid";
+        saveDB();
+        render();
+    }
+
+    function toggleMemberDropdown(index) {
+        let box = document.getElementById(`details-box-${index}`);
+        box.classList.toggle("hidden");
+    }
+
+    function updateLoanMonthAmount(memberIndex, month, value) {
+        let db = globalData[currentPortal];
+        if(!db.members[memberIndex].loanMonths) {
+            db.members[memberIndex].loanMonths = {};
+        }
+        db.members[memberIndex].loanMonths[month] = value;
+        saveDB();
+    }
+
+    function updateLoanMonthStatus(memberIndex, month, value, selectElement) {
+        let db = globalData[currentPortal];
+        if(!db.members[memberIndex].loanStatuses) {
+            db.members[memberIndex].loanStatuses = {};
+        }
+        db.members[memberIndex].loanStatuses[month] = value;
+        applySelectClass(selectElement, value);
+        saveDB();
+    }
+
+    function applySelectClass(element, value) {
+        element.classList.remove("select-unpaid", "select-partial", "select-paid");
+        if (value === "paid") {
+            element.classList.add("select-paid");
+        } else if (value === "partial") {
+            element.classList.add("select-partial");
+        } else {
+            element.classList.add("select-unpaid");
+        }
+    }
+
+    function updateMemberNote(index, value) {
+        let db = globalData[currentPortal];
+        db.members[index].note = value;
+        saveDB();
+    }
+
+    function updateMemberBank(index, value) {
+        let db = globalData[currentPortal];
+        db.members[index].bank = value;
+        saveDB();
+    }
+
+    function updateLoan(index) {
+        let db = globalData[currentPortal];
+        let currentMember = db.members[index];
+        let newTotal = prompt(`أدخل إجمالي السلفة للعضو (${currentMember.name}):`, currentMember.totalLoan || 0);
+        if (newTotal === null) return;
+        let newRemaining = prompt(`أدخل مبلغ السلفة المتبقي للعضو (${currentMember.name}):`, currentMember.loan || 0);
+        if (newRemaining === null) return;
+
+        db.members[index].totalLoan = Number(newTotal) || 0;
+        db.members[index].loan = Number(newRemaining) || 0;
+        saveDB();
+        render();
+    }
+
+    function editMember(index) {
+        let db = globalData[currentPortal];
+        let member = db.members[index];
+        let newName = prompt("تعديل اسم العضو:", member.name);
+        if (newName === null) return;
+        let newPhone = prompt("تعديل رقم الجوال:", member.phone || "");
+        if (newPhone === null) return;
+        let newTotal = prompt("تعديل إجمالي السلفة:", member.totalLoan || 0);
+        if (newTotal === null) return;
+        let newRemaining = prompt("تعديل السلفة المتبقية:", member.loan || 0);
+        if (newRemaining === null) return;
+
+        db.members[index].name = newName.trim() || member.name;
+        db.members[index].phone = newPhone.trim();
+        db.members[index].totalLoan = Number(newTotal) || 0;
+        db.members[index].loan = Number(newRemaining) || 0;
+        saveDB();
+        render();
+    }
+
+    function deleteMember(index) {
+        let db = globalData[currentPortal];
+        let member = db.members[index];
+        if (confirm(`هل أنت تأكد من حذف العضو (${member.name})؟`)) {
+            db.members.splice(index, 1);
+            saveDB();
+            render();
+        }
+    }
+
+    function updateManualStat(key, value) {
+        let db = globalData[currentPortal];
+        db[key] = value;
+        saveDB();
+    }
+
+    function updateMonthStatInput() {
+        let db = globalData[currentPortal];
+        let selectedMonth = document.getElementById("statMonthSelect").value;
+        document.getElementById("inputMonthTotal").value = db.monthlyTotals[selectedMonth] || "";
+    }
+
+    function saveCurrentMonthStat(value) {
+        let db = globalData[currentPortal];
+        let selectedMonth = document.getElementById("statMonthSelect").value;
+        db.monthlyTotals[selectedMonth] = value;
+        saveDB();
+    }
+
+    function sendAlert(phone, name) {
+        if (!phone) { alert("رقم الجوال غير متوفر"); return; }
+        let message = `السلام عليكم ورحمة الله وبركاته. عزيزي ${name}، نود تذكيركم بسداد القسط لهذا الشهر.`;
+        let cleanPhone = phone.replace(/[^0-9]/g, '');
+        if (cleanPhone.startsWith('0')) cleanPhone = '966' + cleanPhone.substring(1);
+        window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
+    }
+
+    function loadMemberPortal() {
+        let db = globalData[currentPortal];
+        let index = document.getElementById("memberSelect").value;
+        let portalCard = document.getElementById("memberPortalCard");
+        if (index === "") {
+            portalCard.classList.add("hidden");
+            return;
+        }
+        let m = db.members[index];
+        document.getElementById("portalName").textContent = m.name;
+        document.getElementById("portalPhone").textContent = m.phone || "غير متوفر";
+        document.getElementById("portalNoteText").textContent = m.note || "-";
+        document.getElementById("portalBankText").textContent = m.bank || "-";
+        
+        let statusBadge = document.getElementById("portalStatus");
+        if(m.status === "paid") {
+            statusBadge.textContent = "مسدد";
+            statusBadge.className = "badge paid";
+        } else if(m.status === "partial") {
+            statusBadge.textContent = "سداد جزئي";
+            statusBadge.className = "badge partial";
+        } else {
+            statusBadge.textContent = "غير مسدد";
+            statusBadge.className = "badge unpaid";
+        }
+
+        document.getElementById("portalTotalLoan").textContent = (m.totalLoan || 0) + " ر.س";
+        document.getElementById("portalLoan").textContent = (m.loan || 0) + " ر.س";
+        
+        checkPortalMonthStatus();
+        
+        portalCard.classList.remove("hidden");
+    }
+
+    function checkPortalMonthStatus() {
+        let db = globalData[currentPortal];
+        let index = document.getElementById("memberSelect").value;
+        let month = document.getElementById("portalMonthSelect").value;
+        let resultDiv = document.getElementById("portalMonthResult");
+        let statusBadge = document.getElementById("portalStatus");
+        
+        if (index === "" || month === "") {
+            resultDiv.textContent = "";
+            return;
+        }
+
+        let m = db.members[index];
+        let amt = m.loanMonths && m.loanMonths[month] ? m.loanMonths[month] : "0";
+        let stat = m.loanStatuses && m.loanStatuses[month] ? m.loanStatuses[month] : "unpaid";
+        
+        let statText = "غير مسدد";
+        let color = "var(--danger)";
+        let icon = "❌";
+        
+        if(stat === "paid") { 
+            statText = "مسدد"; 
+            color = "var(--primary)"; 
+            icon = "✅"; 
+            statusBadge.textContent = "مسدد";
+            statusBadge.className = "badge paid";
+        } else if(stat === "partial") { 
+            statText = "سداد جزئي"; 
+            color = "var(--warning)"; 
+            icon = "⚠️"; 
+            statusBadge.textContent = "سداد جزئي";
+            statusBadge.className = "badge partial";
+        } else {
+            statusBadge.textContent = "غير مسدد";
+            statusBadge.className = "badge unpaid";
+        }
+
+        resultDiv.innerHTML = `<span style="color: ${color};">المبلغ: ${amt || 0} ر.س | الحالة: ${statText} ${icon}</span>`;
+    }
+
+    function render() {
+        if (!currentPortal) return;
+        let db = globalData[currentPortal];
+
+        let select = document.getElementById("memberSelect");
+        let currentSelected = select.value;
+        select.innerHTML = '<option value="">-- اختر اسم العضو --</option>';
+        db.members.forEach((m, i) => {
+            select.innerHTML += `<option value="${i}">${m.name}</option>`;
+        });
+        select.value = currentSelected;
+        if(currentSelected !== "") loadMemberPortal();
+
+        if (document.getElementById("adminScreen").classList.contains("hidden") === false) {
+            updateMonthStatInput();
+        }
+        document.getElementById("inputBalance").value = db.manualBalance || "";
+
+        let adminList = document.getElementById("adminMembersList");
+        if (db.members.length === 0) {
+            adminList.innerHTML = '<p style="color: var(--text-muted); font-size: 0.85rem; text-align: center;">لا توجد بيانات</p>';
+        } else {
+            const monthsNames = {
+                1:"يناير", 2:"فبراير", 3:"مارس", 4:"أبريل", 
+                5:"مايو", 6:"يونيو", 7:"يوليو", 8:"أغسطس", 
+                9:"سبتمبر", 10:"أكتوبر", 11:"نوفمبر", 12:"ديسمبر"
+            };
+            
+            adminList.innerHTML = db.members.map((m, i) => {
+                let statusText = "غير مسدد";
+                let statusClass = "unpaid";
+                if(m.status === "paid") { statusText = "مسدد"; statusClass = "paid"; }
+                else if(m.status === "partial") { statusText = "سداد جزئي"; statusClass = "partial"; }
+
+                let banksOptions = `<option value="">-- اختر البنك --</option>`;
+                saudiBanks.forEach(bank => {
+                    let selected = (m.bank === bank) ? "selected" : "";
+                    banksOptions += `<option value="${bank}" ${selected}>${bank}</option>`;
+                });
+
+                let monthsHtml = `<div id="details-box-${i}" class="details-box hidden">
+                    <div style="margin-bottom: 8px;">
+                        <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">ملاحظات / نص إضافي:</label>
+                        <input type="text" placeholder="اكتب ملاحظات بالأحرف هنا..." value="${m.note || ""}" oninput="updateMemberNote(${i}, this.value)">
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">اختر البنك:</label>
+                        <select onchange="updateMemberBank(${i}, this.value)">
+                            ${banksOptions}
+                        </select>
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 700;">متابعة سداد أقساط الشهور والمبلغ والحالة:</div>`;
+                
+                for(let mNum=1; mNum<=12; mNum++) {
+                    let amtVal = (m.loanMonths && m.loanMonths[mNum]) !== undefined ? (m.loanMonths[mNum] || "") : "";
+                    let statVal = (m.loanStatuses && m.loanStatuses[mNum]) ? m.loanStatuses[mNum] : "unpaid";
+                    
+                    let colorClass = "select-unpaid";
+                    if(statVal === "paid") colorClass = "select-paid";
+                    else if(statVal === "partial") colorClass = "select-partial";
+
+                    monthsHtml += `
+                        <div class="month-item">
+                            <span style="min-width: 45px;">${monthsNames[mNum]}</span>
+                            <input type="number" class="month-input" placeholder="0" value="${amtVal}" oninput="updateLoanMonthAmount(${i}, ${mNum}, this.value)">
+                            <span style="font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-right:-2px;">ر.س</span>
+                            <select class="month-select ${colorClass}" onchange="updateLoanMonthStatus(${i}, ${mNum}, this.value, this)">
+                                <option value="unpaid" ${statVal === 'unpaid' ? 'selected' : ''}>غير مسدد</option>
+                                <option value="partial" ${statVal === 'partial' ? 'selected' : ''}>سداد جزئي</option>
+                                <option value="paid" ${statVal === 'paid' ? 'selected' : ''}><span>مسدد</span></option>
+                            </select>
+                        </div>
+                    `;
+                }
+                monthsHtml += `</div>`;
+
+                return `
+                <div class="row">
+                    <div class="row-top">
+                        <div style="cursor: pointer; flex-grow: 1;" onclick="toggleMemberDropdown(${i})">
+                            <div style="margin-bottom: 4px;">
+                                <strong style="font-size: 1rem;">${m.name}</strong> 
+                                <span class="toggle-arrows"><span style="font-size: 8px;">▲</span><span style="font-size: 8px;">▼</span></span>
+                            </div>
+                            <div style="color: var(--text-muted); font-size: 0.8rem; line-height: 1.6;">
+                                <div>جوال: ${m.phone || "بدون"}</div>
+                                <div>إجمالي السلفة: <strong style="color: var(--text-main);">${m.totalLoan || 0} ر.س</strong> &nbsp;|&nbsp; المتبقي: <strong style="color: var(--warning);">${m.loan || 0} ر.س</strong></div>
+                            </div>
+                        </div>
+                        <span class="badge ${statusClass}" style="cursor: pointer;" onclick="cycleStatus(${i})" title="انقر لتغيير الحالة">${statusText}</span>
+                    </div>
+                    ${monthsHtml}
+                    <div class="row-actions">
+                        <button onclick="cycleStatus(${i})" style="font-size: 0.75rem;">الحالة</button>
+                        <button class="btn-warning" onclick="updateLoan(${i})">السلفة</button>
+                        <button style="background: #2563eb;" onclick="sendAlert('${m.phone}', '${m.name}')">تنبيه</button>
+                    </div>
+                    <div class="row-actions-sub">
+                        <button class="btn-edit" onclick="editMember(${i})">تعديل البيانات</button>
+                        <button class="btn-danger" onclick="deleteMember(${i})">حذف العضو</button>
+                    </div>
+                </div>
+            `;
+            }).join("");
+        }
+    }
+</script>
+
+</body>
+</html>
