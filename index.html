@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صندوق العائلة - متابعة الأقساط</title>
+    <style>
+        body {
+            font-family: Tahoma, sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            direction: rtl;
+            padding: 20px;
+            margin: 0;
+        }
+        h2 {
+            text-align: center;
+            color: #58a6ff;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #161b22;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+        .row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #21262d;
+            margin-bottom: 10px;
+            padding: 10px 15px;
+            border-radius: 6px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .row label {
+            font-weight: bold;
+            color: #f0f6fc;
+            min-width: 90px;
+        }
+        input[type="text"], input[type="number"] {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            padding: 6px 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        input[type="text"] {
+            width: 90px;
+        }
+        input[type="number"] {
+            width: 100px;
+        }
+        select {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            padding: 6px 10px;
+            border-radius: 4px;
+        }
+        .status-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            transition: 0.2s;
+        }
+        .status-unpaid {
+            background-color: #da3633;
+        }
+        .status-paid {
+            background-color: #238636;
+        }
+        .bank-select-container {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>متابعة صندوق العائلة</h2>
+    
+    <div class="bank-select-container">
+        <select id="bankSelect">
+            <option value="">-- اختار البنك --</option>
+            <option value="rajhi">مصرف الراجحي</option>
+            <option value="alahli">البنك الأهلي السعودي</option>
+            <option value="riyad">بنك الرياض</option>
+            <option value="inma">بنك الإنماء</option>
+        </select>
+    </div>
+
+    <p style="text-align: center; font-size: 13px; color: #8b949e;">
+        متابعة سداد أقساط الشهور والمبلغ والحالة (يمكنك الكتابة وتعديل التاريخ بحرية):
+    </p>
+
+    <div id="monthsContainer">
+        <!-- سيتم توليد 15 شهراً ديناميكياً عبر الجافاسكريبت -->
+    </div>
+</div>
+
+<script>
+    const container = document.getElementById('monthsContainer');
+    
+    // تاريخ البدء (يناير 2026)
+    let baseMonth = 1;
+    let baseYear = 2026;
+
+    // توليد 15 شهراً فقط بناءً على طلبك
+    for (let i = 1; i <= 15; i++) {
+        let m = baseMonth + (i - 1);
+        let y = baseYear;
+        while (m > 12) {
+            m -= 12;
+            y += 1;
+        }
+        let dateFormatted = m + "." + y;
+
+        const row = document.createElement('div');
+        row.className = 'row';
+
+        row.innerHTML = `
+            <label>الشهر ${i}</label>
+            <input type="text" value="${dateFormatted}">
+            <input type="number" value="0" placeholder="المبلغ">
+            <span>ر.س</span>
+            <button type="button" class="status-btn status-unpaid" onclick="toggleStatus(this)">غير مسدد</button>
+        `;
+
+        container.appendChild(row);
+    }
+
+    function toggleStatus(btn) {
+        if (btn.classList.contains('status-unpaid')) {
+            btn.classList.remove('status-unpaid');
+            btn.classList.add('status-paid');
+            btn.textContent = 'مسدد';
+        } else {
+            btn.classList.remove('status-paid');
+            btn.classList.add('status-unpaid');
+            btn.textContent = 'غير مسدد';
+        }
+    }
+</script>
+
+</body>
+</html>
